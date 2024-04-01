@@ -37,6 +37,7 @@ BOOKS = [
 async def first_api():
     return {"message": "This is / "}
 
+
 # QUERY PARAMTERS
 @app.get("/books")
 async def read_all_books(skip_book: Optional[str]= None):
@@ -62,6 +63,7 @@ async def read_book(book_id):
     title  = BOOKS[f"book_{book_id}"]
     return {"book": f"{title["title"]}"}
 
+
 # GET BOOK ID BY TITLE
 @app.get("/books/id/{title}")
 async def id_by_title(title):
@@ -72,7 +74,6 @@ async def id_by_title(title):
     
 
 # POST BOOK
-
 @app.post("/create/{book_title}:{book_author}")
 async def create_book(book_title, book_author):
     current_book_id = 0
@@ -86,7 +87,6 @@ async def create_book(book_title, book_author):
             
 
 # PUT BOOK
-
 @app.put("/update")
 async def update_book(book_id: int, new_title: str, new_author: str):
     for book in BOOKS:
@@ -95,6 +95,7 @@ async def update_book(book_id: int, new_title: str, new_author: str):
             book["author"] = new_author
             return {"message": f"Updated book - {new_title} by {new_author}"}
         
+    
 # DELETE BOOK
 @app.delete("/delete/{book_id}")
 async def delete_book(book_id: int):
