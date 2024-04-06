@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 from uuid import UUID
 from typing import Optional
@@ -30,17 +30,56 @@ class Book(BaseModel):
 BOOKS = []
 
 
-
 @app.get("/")
-async def read_all_books():
+async def read_all_books(books_to_return: Optional[int] = None):
   if len(BOOKS) < 1:
+    # ZAPELNIA ARRAY, BEZ TEGO ARRAY JEST PUSTY
     # jesli nie ma ksiazek w array to je dodaj z funkcji ponizej
     create_books_no_api()
+
+  if books_to_return and len(BOOKS) >= books_to_return > 0:
+    # books_to_return to opcjonalne query, ktore po podaniu
+    # liczby zwraca taka ilosc ksiazek
+    i = 1
+    x_books = []
+    while i <= books_to_return:
+      x_books.append(BOOKS[i-1])
+      i += 1
+    return x_books
   return BOOKS
 
 
+# GET BOOK BY UUID
+@app.get("/book/{book_id}")
+async def get_by_id(book_id: UUID):
+  for book in BOOKS:
+    if book.id == book_id:
+      return book
+  raise raise_item_cannot_be_found_exception()
 
 
+# PUT UPDATE BY UUID
+@app.put("/book/{book_id}")
+async def update_book(book_id: UUID, book : Book):
+  for item in BOOKS:
+    if item.id == book_id:
+      BOOKS[BOOKS.index(item)] = book
+      return{"msg":"Book has been updated"}
+  raise raise_item_cannot_be_found_exception()
+    
+
+# DELETE BY UUID
+@app.delete("/book/{book_id}")
+async def delete_book(book_id: UUID):
+  for item in BOOKS:
+    if item.id == book_id:
+      BOOKS.remove(item)
+      return{"message": f"{item.title} has been deleted"}
+  # kod nizej zostanie wykonany wtedy kiedy if fails
+  raise HTTPException(status_code=404, detail="Book not found", headers={"X-Header-Error": "Nothing to be seen at the UUID"})
+
+
+# POST ADD BOOK
 @app.post("/")
 # book parameter musi byc typu Book, 
 # tylko json request body z danymi ustalonymi
@@ -48,6 +87,8 @@ async def read_all_books():
 async def create_book(book: Book): 
   BOOKS.append(book)
   return book
+
+
 
 
 
@@ -67,3 +108,8 @@ def create_books_no_api():
   BOOKS.append(book_4)
   BOOKS.append(book_5)
   
+
+
+
+def raise_item_cannot_be_found_exception():
+  return HTTPException(status_code=404, detail="Book not found", headers={"X-Header-Error": "Nothing to be seen at the UUID"})

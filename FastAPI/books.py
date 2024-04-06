@@ -1,6 +1,7 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from enum import Enum
 from typing import Optional
+
 
 app = FastAPI()
 
@@ -94,6 +95,7 @@ async def update_book(book_id: int, new_title: str, new_author: str):
             book["title"] = new_title
             book["author"] = new_author
             return {"message": f"Updated book - {new_title} by {new_author}"}
+    
         
     
 # DELETE BOOK
