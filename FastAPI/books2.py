@@ -1,11 +1,17 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request, status, Form, Header
 from pydantic import BaseModel, Field
 from uuid import UUID
 from typing import Optional
+from starlette.responses import JSONResponse
+
+
+# klasa o typie exception
+class NegativeNumberException(Exception):
+  def __init__(self, books_to_return):
+    self.books_to_return = books_to_return
 
 
 app = FastAPI()
-
 
 #BaseModel z walidacja danych przyjmuje tylko ponizsze typy
 class Book(BaseModel):
@@ -27,11 +33,40 @@ class Book(BaseModel):
       }
     }
   }
+
+class BookNoRating(BaseModel):
+  id: UUID
+  title: str = Field(min_length=1)
+  author: str = Field(min_length=1)
+  description: Optional[str] = Field(None, title="description of the Book", max_length=100, min_length=1)
+
+
 BOOKS = []
+
+
+@app.exception_handler(NegativeNumberException)
+async def negative_number_exception_handler(reqeust: Request, exception: NegativeNumberException):
+  return JSONResponse(
+    status_code=418,
+    content={"message": f"Negative number of books {exception.books_to_return} error"}
+  )
+
+
+@app.post("/books/login")
+async def books_login(username: str = Form(...), password: str = Form(...)): # Form automatycznie dekoduje username i password
+  return {"username": username, "password": password}
+
+
+# Header wysyla dodatkowe informacje podczas zadania
+@app.get("/header")
+async def read_header(random_header: Optional[str] = Header(None)):
+  return {"Random-Header": random_header}
 
 
 @app.get("/")
 async def read_all_books(books_to_return: Optional[int] = None):
+  if books_to_return and books_to_return < 0:
+    raise NegativeNumberException(books_to_return=books_to_return)
   if len(BOOKS) < 1:
     # ZAPELNIA ARRAY, BEZ TEGO ARRAY JEST PUSTY
     # jesli nie ma ksiazek w array to je dodaj z funkcji ponizej
@@ -57,6 +92,18 @@ async def get_by_id(book_id: UUID):
       return book
   raise raise_item_cannot_be_found_exception()
 
+# GET BOOK NO RATING
+# kiedy funkcja returnuje book to response_model zostanie przekonwertowany na BookNoRating model
+@app.get("/book/norating/{book_id}", response_model=BookNoRating)
+async def get_by_id_no_rating(book_id: UUID):
+  for book in BOOKS:
+    if book.id == book_id:
+      return book
+  raise raise_item_cannot_be_found_exception()
+
+
+
+
 
 # PUT UPDATE BY UUID
 @app.put("/book/{book_id}")
@@ -80,7 +127,7 @@ async def delete_book(book_id: UUID):
 
 
 # POST ADD BOOK
-@app.post("/")
+@app.post("/" , status_code=status.HTTP_201_CREATED) # status code dodaje nowy status dla post
 # book parameter musi byc typu Book, 
 # tylko json request body z danymi ustalonymi
 # w class Book(BaseModel) zadziala
