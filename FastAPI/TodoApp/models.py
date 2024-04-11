@@ -35,7 +35,7 @@ class Todos(Base):
   owner_id = Column(Integer, ForeignKey("users.id"))
 
   # relationship tworzy polaczenie miedzy tabelka users i todos
-  owner = relationship("users", back_populates="todos")
+  owner = relationship("Users", back_populates="todos")
 
 
 
