@@ -9,6 +9,8 @@
 $ pip install "fastapi[all]"
 ```
 
+<br/>
+
 Basic FastAPI setup
 
 ```python
@@ -19,6 +21,8 @@ app = FastAPI()
 async def root():
     return {"message": "Hello World"}
 ```
+
+<br/>
 
 CORS allows cross-origin requests
 
@@ -33,6 +37,8 @@ app.add_middleware(
   allow_headers=["*"],
 )
 ```
+
+<br/>
 
 ## HTTP Methods
 
@@ -138,7 +144,7 @@ class Users(Base):
   todos = relationship("Todos", back_populates="owner")
 ```
 
-## User Authentication
+## Authentication
 
 CryptContext is used for password hashing
 
@@ -224,4 +230,33 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     return {"access_token": access_token, "token_type": "bearer"}
   else:
     raise HTTPException(status_code=400, detail="Incorrect username or password")
+```
+
+<br>
+
+## Responses and Execptions
+
+```py
+def successful_response(status_code: int):
+  return {
+    "status": status_code,
+    "transaction": "succesful"
+  }
+```
+
+```py
+def http_exception():
+  return HTTPException(status_code=404, detail="Item not found")
+```
+
+```py
+def get_user_exception():
+  credentials_exception = HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate credentials", headers={"WWW-Authenticate": "Bearer"})
+  return credentials_exception
+```
+
+```py
+def token_exception():
+  token_exception_response = HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect username or password", headers={"WWW-Authenticate": "Bearer"})
+  return token_exception_response
 ```
